@@ -108,23 +108,30 @@ class FeStat(object):
             
             ntoa = len(psr.toas)
 
-            A = np.zeros((4, ntoa))
+            A = np.zeros((2, ntoa))
             A[0, :] = 1 / f0 ** (1 / 3) * np.sin(2 * np.pi * f0 * (psr.toas-tref))
             A[1, :] = 1 / f0 ** (1 / 3) * np.cos(2 * np.pi * f0 * (psr.toas-tref))
-            A[2, :] = 1 / f0 ** (1 / 3) * np.sin(2 * np.pi * f0 * (psr.toas-tref))
-            A[3, :] = 1 / f0 ** (1 / 3) * np.cos(2 * np.pi * f0 * (psr.toas-tref))
+            #A[2, :] = 1 / f0 ** (1 / 3) * np.sin(2 * np.pi * f0 * (psr.toas-tref))
+            #A[3, :] = 1 / f0 ** (1 / 3) * np.cos(2 * np.pi * f0 * (psr.toas-tref))
 
             ip1 = innerProduct_rr(A[0, :], psr.residuals, Nmat, T, Sigma, brave=brave)
             ip2 = innerProduct_rr(A[1, :], psr.residuals, Nmat, T, Sigma, brave=brave)
-            ip3 = innerProduct_rr(A[2, :], psr.residuals, Nmat, T, Sigma, brave=brave)
-            ip4 = innerProduct_rr(A[3, :], psr.residuals, Nmat, T, Sigma, brave=brave)
+            #ip3 = innerProduct_rr(A[2, :], psr.residuals, Nmat, T, Sigma, brave=brave)
+            #ip4 = innerProduct_rr(A[3, :], psr.residuals, Nmat, T, Sigma, brave=brave)
             
-            N[idx, :] = np.array([ip1, ip2, ip3, ip4])
-                                  
+            N[idx, :] = np.array([ip1, ip2, ip1, ip2])
+
             # define M matrix M_ij=(A_i|A_j)
-            for jj in range(4):
-                for kk in range(4):
-                    M[idx, jj, kk] = innerProduct_rr(A[jj, :], A[kk, :], Nmat, T, Sigma, brave=brave)
+            AAss = innerProduct_rr(A[0, :], A[0, :], Nmat, T, Sigma, brave=brave)
+            AAcc = innerProduct_rr(A[1, :], A[1, :], Nmat, T, Sigma, brave=brave)
+            AAsc = innerProduct_rr(A[1, :], A[0, :], Nmat, T, Sigma, brave=brave)
+            M[idx, :, :] = np.array([[AAss, AAsc, AAss, AAsc],
+                                     [AAsc, AAcc, AAsc, AAcc],
+                                     [AAss, AAsc, AAss, AAsc],
+                                     [AAsc, AAcc, AAsc, AAcc]])
+            #for jj in range(4):
+            #    for kk in range(4):
+            #        M[idx, jj, kk] = innerProduct_rr(A[jj, :], A[kk, :], Nmat, T, Sigma, brave=brave)
 
         fstat = np.zeros(gw_skyloc.shape[1])
         if maximized_parameters:
